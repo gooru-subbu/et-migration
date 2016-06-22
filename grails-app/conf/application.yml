@@ -46,7 +46,7 @@ environments:
                 dbCreate: none
                 username: nucleus
                 password: nucleus
-                url: jdbc:postgresql://gooru-30-prod-postgresdb.c1ybherlivcq.us-west-1.rds.amazonaws.com/;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+                url: jdbc:postgresql://gooru-30-prod-postgresdb.c1ybherlivcq.us-west-1.rds.amazonaws.com:5432/nucleus
                 properties:
                     jmxEnabled: true
                     initialSize: 5
@@ -69,7 +69,7 @@ environments:
                 dbCreate: none
                 username: etv2admin
                 password: xjkK6LUuqa83zMeC
-                url: jdbc:mysql://etv2prod3-new.cdr3srm8sgkk.us-west-1.rds.amazonaws.com/
+                url: jdbc:mysql://etv2prod3-new.cdr3srm8sgkk.us-west-1.rds.amazonaws.com/etv2prod3
                 
 ---
 ---

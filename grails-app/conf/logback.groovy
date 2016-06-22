@@ -12,17 +12,17 @@ appender('STDOUT', ConsoleAppender) {
 root(ERROR, ['STDOUT'])
 
 
+appender('FILE', FileAppender) {
+    file = "./et2gooru.log"
+    append = true
+    encoder(PatternLayoutEncoder) {
+        pattern = "%level %logger - %msg%n"
+    }
+}
+logger("grails.app.services.org.gooru.et2gooru", INFO, ['FILE'], false)
+
 def targetDir = BuildSettings.TARGET_DIR
 if (Environment.isDevelopmentMode() ) {
-	appender('FILE', FileAppender) {
-	    file = "./et2gooru.log"
-	    append = true
-	    encoder(PatternLayoutEncoder) {
-	        pattern = "%level %logger - %msg%n"
-	    }
-	}
-	logger("grails.app.services.org.gooru.et2gooru", INFO, ['FILE'], false)
-
     if (targetDir) {
 	    appender("FULL_STACKTRACE", FileAppender) {
 	        file = "${targetDir}/stacktrace.log"
