@@ -9,10 +9,10 @@ import org.gooru.et2gooru.Utils
 class UserIdentity {
     Long id
 
-	UUID userId
+	String userId
 	String referenceId
 	String emailId
-	UUID clientId
+	String clientId
 	String loginType
 	String provisionType
 	Boolean emailConfirmStatus
@@ -31,26 +31,28 @@ class UserIdentity {
 	public saveIt(def etId, boolean bInsertItem){
 		def sql = Utils.getWriteDBConnection()
 		
-		println "Save IT : ${this.userId}"
-		
         def keys = sql.executeInsert( "insert into et_user_identity(login_type, provision_type, email_id, reference_id, user_id, email_confirm_status, status, created_at, updated_at, client_id, et_id, et_insert_flag  ) " + 
             						  "values (?,?,?,?,?,?,?,?,?,?,?,?)",
-            						  [Sql.OTHER(this.loginType), Sql.OTHER(this.provisionType), this.emailId, this.referenceId, this.userId, this.emailConfirmStatus, Sql.OTHER(this.status), this.createdAt, this.updatedAt, this.clientId, etId, bInsertItem  ]  ) 
-    }
-    
-    public updateIt(def etId){
-		def sql = Utils.getWriteDBConnection()
-		
-        def keys = sql.executeUpdate( "update et_user_identity set reference_id = ? where id = ?",
-            						  [this.referenceId, this.id]  ) 
+            						  [ Sql.OTHER(this.loginType), 
+            						  	Sql.OTHER(this.provisionType), 
+            						  	this.emailId, 
+            						  	this.referenceId, 
+            						  	UUID.fromString(this.userId), 
+            						  	this.emailConfirmStatus, 
+            						  	Sql.OTHER(this.status), 
+            						  	this.createdAt, 
+            						  	this.updatedAt, 
+            						  	UUID.fromString(this.clientId), 
+            						  	etId, 
+            						  	bInsertItem  ]  ) 
     }
     
     public boolean isMigrated(def etId) {
 		def sql = Utils.getWriteDBConnection()
 		
-        def keys = sql.rows( "select user_id, et_id from et_user_identity  where et_id = ${etId}" )
-		if (keys && keys.size() > 0) {
-			this.userId = keys[0].getAt(0)
+        def keys = sql.firstRow( "select user_id, et_id from et_user_identity  where et_id = ${etId}" )
+		if (keys) {
+			this.userId = keys.user_id
 			return true
         }
         

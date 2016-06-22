@@ -1,5 +1,7 @@
 package org.gooru.et2gooru
 import grails.converters.*
+import org.gooru.et2gooru.UserIdentity
+
 
 class MigrationController {
 
@@ -11,9 +13,7 @@ class MigrationController {
     def index() {
     	boolean migrateUsers = true
     	boolean migrateAssessments = true
-    	
-//    	println "Instance Counter = ${InstanceCounter}"
-    	
+    	    	
     	if (InstanceCounter == 0) {
 			def returnVal = etreadService.migrateETData(migrateUsers, migrateAssessments)
 			
@@ -29,4 +29,14 @@ class MigrationController {
     	
     	render "done"
     } 
+    
+    
+    def test() {
+		def lstUsrs = UserIdentity.findAll()
+		def retVal = ""
+		lstUsrs?.each {
+			retVal = retVal + it.userId + " - " + it.emailId + " - " + it.clientId + " \n <br/> "
+		}
+		render retVal 
+    }
 }

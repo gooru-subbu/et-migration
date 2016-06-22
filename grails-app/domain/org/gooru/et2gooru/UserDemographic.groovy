@@ -50,9 +50,9 @@ class UserDemographic {
     public boolean isMigrated(def etId) {
 		def sql = Utils.getWriteDBConnection()
 		
-        def keys = sql.rows( "select id, et_id from et_user_demographic  where et_id = ${etId}" )
-		if (keys && keys.size() > 0) {
-			this.id = keys[0].getAt(0)
+        def keys = sql.firstRow( "select id, et_id from et_user_demographic  where et_id = ${etId}" )
+		if (keys) {
+			this.id = keys.id
 			return true	
         }
         

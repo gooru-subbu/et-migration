@@ -15,7 +15,7 @@ import groovy.sql.Sql
 class GooruwriteService {
 
 	static datasource = 'datasource'
-	static UUID CONST_CLIENT_ID = UUID.fromString("ba956a97-ae15-11e5-a302-f8a963065976")	  // TBD: may want to change this to something other than our Gooru ID 
+	static String CONST_CLIENT_ID = "ba956a97-ae15-11e5-a302-f8a963065976"	  // TBD: may want to change this to something other than our Gooru ID 
 
 	//
 	// DB Connection Init 
@@ -87,7 +87,6 @@ class GooruwriteService {
 	    		log.info  "User Demographic already existing for ET user ID: " + user.id + " Gooru ID: " + userDemographic.id
 			}
     		
-    		println "User Demographic ET user ID: " + user.id + " Gooru ID: " + userDemographic.id
     		return userDemographic.id    		
 		} catch ( Exception e ) {
 			log.error "Failed to create user_demographic in Gooru DB for ET user ID: " + user.id + " \n  ${e.message}"
@@ -107,25 +106,19 @@ class GooruwriteService {
 				//
 				boolean bInsertItem
 				def lstUsrs = UserIdentity.findAllByEmailId(user.email)
-				
-//		    	def lstUsrs = UserIdentity.executeQuery("select u.loginType, u.provisionType, u.emailConfirmStatus, u.status, u.clientId, u.referenceId, u.emailId, u.userId, u.updatedAt, u.createdAt from UserIdentity u where u.emailId = ?", [user.email])
-    			println "User Identity ET user ID: " + user.id + " Gooru User ID: FOUND??" + lstUsrs.size() + " - " + lstUsrs[0].userId
-    			return;
-    			
 		    	if (lstUsrs && (lstUsrs.size() > 0)) {
-    			println "User Identity ET user ID: " + user.id + " Gooru User ID: FOUND in GOORU" 
 		    		bInsertItem = false
-					userId.loginType = lstUsrs[0].getAt(0)
-					userId.provisionType = lstUsrs[0].getAt(1)
-					userId.emailConfirmStatus = lstUsrs[0].getAt(2)
-					userId.status = lstUsrs[0].getAt(3)
-					userId.clientId = lstUsrs[0].getAt(4)
-					userId.referenceId = lstUsrs[0].getAt(5)
-					userId.emailId = lstUsrs[0].getAt(6)
-					userId.userId = lstUsrs[0].getAt(7)
+					userId.loginType = lstUsrs[0].loginType
+					userId.provisionType = lstUsrs[0].provisionType
+					userId.emailConfirmStatus = lstUsrs[0].emailConfirmStatus
+					userId.status = lstUsrs[0].status
+					userId.clientId = lstUsrs[0].clientId
+					userId.referenceId = lstUsrs[0].referenceId
+					userId.emailId = lstUsrs[0].emailId
+					userId.userId = lstUsrs[0].userId
 					
-					userId.updatedAt = (lstUsrs[0].getAt(8)) ? lstUsrs[0].getAt(8) : Utils.getDateWithoutTimezone()
-					userId.createdAt = (lstUsrs[0].getAt(9)) ? lstUsrs[0].getAt(9) : userId.updatedAt
+					userId.updatedAt = (lstUsrs[0].updatedAt) ? lstUsrs[0].updatedAt : Utils.getDateWithoutTimezone()
+					userId.createdAt = (lstUsrs[0].createdAt) ? lstUsrs[0].createdAt : userId.updatedAt
 				} else {
 					bInsertItem = true
 					userId.loginType = "credential"
@@ -142,8 +135,6 @@ class GooruwriteService {
 					userId.updatedAt = (user.lastUpdated) ? user.lastUpdated : Utils.getDateWithoutTimezone()
 					userId.createdAt = (user.accountCreated) ? user.accountCreated : userId.updatedAt
 				}
-			
-    			println "User Identity ET user ID: " + user.id + " Gooru User ID: " + userId.userId
     		
 	    		userId.saveIt(user.id, bInsertItem)
 	    		log.info "User Identity created successfully for ET user ID: " + user.id
@@ -362,7 +353,8 @@ class GooruwriteService {
     // Post migration script...
     //
     def postMigrationRun() {
-    
+		log.info "Start PostMigrationRun: " + (new Date()).getTime()
+
 		def sql = Utils.getWriteDBConnection()
 		
 		def sqlWrite = (Environment.isDevelopmentMode()) ?
@@ -381,6 +373,7 @@ class GooruwriteService {
 		if (totalCount < offset) moreToGet = false  
 		
 		while (moreToGet) {
+			try {
 			sqlWrite.withTransaction {
 				def result = sqlWrite.withBatch('insert into user_demographic(firstname, lastname, email_id, created_at, updated_at, user_category, id) values (?,?,?,?,?,?,?)' ) { stmt ->
 					sql.eachRow("select * from  et_user_demographic where et_insert_flag = true", offset, maxRows) { row -> 
@@ -388,6 +381,10 @@ class GooruwriteService {
 					}
 					
 				}
+			}
+			} catch (Exception e) {
+				log.error  "Failed to move from Et_user_demographic to user_demographic !! \n ${e.message}"
+				// continue to do as much as you can....
 			}
 			offset = offset + maxRows
 			if (totalCount < offset) moreToGet = false  
@@ -401,6 +398,7 @@ class GooruwriteService {
 		if (totalCount < offset) moreToGet = false  
 		
 		while (moreToGet) {
+			try {
 			sqlWrite.withTransaction {
 				def result = sqlWrite.withBatch('insert into user_identity(login_type, provision_type, email_id, reference_id, user_id, email_confirm_status, status, created_at, updated_at, client_id) values (?,?,?,?,?,?,?,?,?,?)' ) { stmt ->
 				
@@ -409,6 +407,10 @@ class GooruwriteService {
 					}
 					
 				}
+			}
+			} catch (Exception e) {
+				log.error  "Failed to move from Et_user_identity to user_identity !! \n ${e.message}"
+				// continue to do as much as you can....
 			}
 			offset = offset + maxRows
 			if (totalCount < offset) moreToGet = false  
@@ -422,6 +424,7 @@ class GooruwriteService {
 		if (totalCount < offset) moreToGet = false  
 		
 		while (moreToGet) {
+			try {
 			sqlWrite.withTransaction {
 				def result = sqlWrite.withBatch('insert into collection(title, created_at, updated_at, owner_id, creator_id, modifier_id, format, metadata, setting, grading, license, creator_system) values (?,?,?,?,?,?,?,?,?,?,?,?)' ) { stmt ->
 				
@@ -431,6 +434,11 @@ class GooruwriteService {
 					
 				}
 			}
+			} catch (Exception e) {
+				log.error  "Failed to move from Et_collection to collection !! \n ${e.message}"
+				// continue to do as much as you can....
+			}
+			
 			offset = offset + maxRows
 			if (totalCount < offset) moreToGet = false  
 		}
@@ -443,6 +451,7 @@ class GooruwriteService {
 		if (totalCount < offset) moreToGet = false  
 		
 		while (moreToGet) {
+			try {
 			sqlWrite.withTransaction {			
 				def result = sqlWrite.withBatch(" insert into content(title, created_at, updated_at, creator_id, modifier_id, description, " +
         							   " content_format, content_subformat, answer, metadata, collection_id, sequence_id, " +
@@ -469,13 +478,21 @@ class GooruwriteService {
 					
 				}
 			}
+			} catch (Exception e) {
+				log.error  "Failed to move from Et_content to content !! \n ${e.message}"
+				// continue to do as much as you can....
+			}
+			
 			offset = offset + maxRows
 			if (totalCount < offset) moreToGet = false  
 		}
 		
 		sqlWrite.close()
 		
-		//endMigration() // close connection
+		endMigration() // close connection
+		
+		log.info "End PostMigrationRun: " + (new Date()).getTime()
+		
     }
     
 }

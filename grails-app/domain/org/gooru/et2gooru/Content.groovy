@@ -85,9 +85,9 @@ class Content {
     public boolean isMigrated(def etId, def etItemId) {
 		def sql = Utils.getWriteDBConnection()
 		
-        def keys = sql.rows( "select id, et_id, et_item_id from et_content  where et_id = ${etId} and et_item_id = ${etItemId}" )
-		if (keys && keys.size() > 0) {
-			this.id = keys[0].getAt(0)
+        def keys = sql.firstRow( "select id, et_id, et_item_id from et_content  where et_id = ${etId} and et_item_id = ${etItemId}" )
+		if (keys) {
+			this.id = keys.id
 			return true	
         }
         
