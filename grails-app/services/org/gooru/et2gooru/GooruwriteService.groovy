@@ -15,8 +15,9 @@ import groovy.sql.Sql
 class GooruwriteService {
 
 	static datasource = 'datasource'
-	static String CONST_CLIENT_ID = "ba956a97-ae15-11e5-a302-f8a963065976"	  // TBD: may want to change this to something other than our Gooru ID 
-
+	static String CONST_CLIENT_ID = "ba956a97-ae15-11e5-a302-f8a963065976"	  // TBD: may want to change this to something other than our Gooru ID
+    final Integer MAX_QUESTION_LIMIT = 20000
+	
 	//
 	// DB Connection Init 
 	//
@@ -206,10 +207,12 @@ class GooruwriteService {
 			   	gQuestion.contentSubformat = getContentSubformat(mbq.answerType)
 			   	
 			   	// Make sure to update the mimetex pointers....and any image CDN urls...
-			   	def desc = getUpdatedQuestionText(mbq.studentDirection)
-			   	gQuestion.description = "<b> " + mbq.title + "</b> <br>" + desc   	
-		    	if (mbq.answerType.equalsIgnoreCase("FA")) gQuestion.description = gQuestion.description + "<p> Answer: _______ </p>"
-		    	
+			   	def desc = "<b>" + mbq.title + "</b><br>" + getUpdatedQuestionText(mbq.studentDirection)
+		    	if (mbq.answerType.equalsIgnoreCase("FA")) desc = desc + "<p>Answer: _______ </p> "
+			   	
+		    	if (desc.length() >= MAX_QUESTION_LIMIT) gQuestion.description = desc[0..MAX_QUESTION_LIMIT-1]
+		    	else gQuestion.description = desc
+			   	
 			   	gQuestion.answer = getAnswerObject(mbq.answerType, mbq, etAnswerList)
 		
 			   	gQuestion.metadata = getDOK(mbq.questionDifficulty)

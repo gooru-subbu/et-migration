@@ -51,7 +51,7 @@ class EtreadService {
     
     
     def getMasterBankItemForUserAndCreateInGooru(User user, def gooruUserId) {
-    	
+      try {
     	def itemList = MasterBankItem.findAllByTeacherUidAndTicketTypeInList(user.id, [1,2,4,6])
     	
     	def itemTypesList = MasterBankItemTypes.findAllByIdInList([1,2,4,6])
@@ -71,9 +71,13 @@ class EtreadService {
     			// QUESTION MIGRATION DONE....
     	}
 		log.info "Completed migrating Assessments for User : ${user.id} "
+  	  } catch (Exception e) {
+		  log.error "Failed to migrate Assessments for user: ${user.id} \n ${e.message}"
+	  }
     }
     
     def getQuestionForMasterBankItemAndCreateInGooru(MasterBankItem mbi, User user, def gooruUserId, def assmtId) {
+      try {
 	    final String MC_TYPE = "MC" 
 	    final String FA_TYPE = "FA"
 
@@ -109,6 +113,9 @@ class EtreadService {
 		}
 		
 		log.info "Completed migrating Questions for Assessment : ${mbi.id} "		
+	  } catch (Exception e) {
+			log.error "Failed to migrate questions for Assessment id: {mbi.id} for user: ${user.id} \n ${e.message}"
+	  }
     }
     
 }
